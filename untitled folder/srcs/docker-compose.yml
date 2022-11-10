@@ -1,0 +1,68 @@
+version: '3'
+services:
+
+  mariadb:
+    build: ./requirements/mariadb
+    image: mariadb_image
+    container_name: database
+    expose:
+        - '3306'
+    volumes:
+        - database:/var/lib/mysql
+    env_file:
+        - .env
+    networks:
+        - application
+    restart: unless-stopped
+
+
+
+  nginx:
+    build: ./requirements/nginx
+    image: nginx_image
+    depends_on: 
+      - wordpress
+    container_name: Server
+    ports:
+        - '443:443'
+    volumes:
+        - wordpress:/var/www/html
+    restart: unless-stopped
+    networks:
+        - application
+ 
+  wordpress:
+    depends_on: 
+      - mariadb
+    build: ./requirements/wordpress
+    container_name: webapp
+    image: wp_image
+    expose:
+        - '9000'
+    volumes:
+        - wordpress:/var/www/html
+    env_file:
+        - .env
+    networks:
+        - application
+    restart: unless-stopped
+
+
+
+volumes:
+  database:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/otaouil/data/database
+  wordpress:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/otaouil/data/wordpress
+
+networks:
+    application:
+        driver: bridge
